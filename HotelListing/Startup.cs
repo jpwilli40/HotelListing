@@ -1,6 +1,9 @@
+using HotelListing.Configurations;
+using HotelListing.Controllers.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,7 +27,9 @@ namespace HotelListing
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddDbContext<DatabaseContext>(options =>           //Initiates the sql server connection defined in app.config
+                options.UseSqlServer(Configuration.GetConnectionString("sqlConnection"))
+            );
 
             services.AddCors(o => {  //allows certian people to access your API
                 o.AddPolicy("CorsPolicy", builder =>
@@ -33,11 +38,15 @@ namespace HotelListing
                     .AllowAnyHeader());
             });
 
+            services.AddAutoMapper(typeof(MapperInitializer));
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotellisting", Version = "v1" });
             });
-                
+
+            services.AddControllers();
+
             services.AddRazorPages();
         }
 
