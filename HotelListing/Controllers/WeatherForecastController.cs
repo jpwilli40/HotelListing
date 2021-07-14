@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using HotelListing.Controllers.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -25,11 +26,17 @@ namespace HotelListing.Controllers
         }
 
         [HttpGet]
-        public int Get()
+        public IEnumerable<WeatherForecast> Get()
         {
-            int num = 40;
+            var rng = new Random();
+            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            {
+                Date = DateTime.Now.AddDays(index),
+                TemperatureC = rng.Next(-20, 55),
+                Summary = summaries[rng.Next(summaries.Length)]
+            })
+            .ToArray();
 
-            return num;
         }
     }
 }

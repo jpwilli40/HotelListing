@@ -40,7 +40,7 @@ namespace HotelListing.Repository
                 query = include(query);
             }
 
-            return await query.AsNoTracking().FirstOrDefaultAsync(expression);
+            return await query.AsNoTracking().FirstOrDefaultAsync(expression);  //returns the first or default record that matches expression
         }
 
         public async Task<IList<T>> GetAll(Expression<Func<T, bool>> expression = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
