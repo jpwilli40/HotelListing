@@ -61,7 +61,7 @@ namespace HotelListing.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Something Went Wrong in the {nameof(GetCountry)}");
-                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later .");
             }
         }
     }
