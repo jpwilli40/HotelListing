@@ -17,8 +17,12 @@ namespace HotelListing.DTOModels
         public string ShortName { get; set; }
     }
 
+    public class UpdateCountryDTO : CreateCountryDTO //just created for Single Responsibility concept, inherits everything from CreateHotelDTO but is more specific for PUT request vs the CreateHotel POST request
+    {
+        public IList<CreateHotelDTO> Hotels { get; set; }  //allows to update hotels inside of country as well, using CreateHotelDTO since we dont want/need to update Id for hotel
+    }
 
-        public class CountryDTO : CreateCountryDTO //inherits from everything defined
+    public class CountryDTO : CreateCountryDTO //inherits from everything defined
     {
         public int CountryId { get; set; }
         public IList<HotelDTO> Hotels { get; set; }

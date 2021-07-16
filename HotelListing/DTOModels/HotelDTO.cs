@@ -20,8 +20,13 @@ namespace HotelListing.DTOModels
         [Range(1, 5)]
         public double Rating { get; set; }
 
-        [Required]
+        //[Required]
         public int CountryId { get; set; }
+    }
+
+    public class UpdateHotelDTO : CreateHotelDTO //just created for Single Responsibility concept, inherits everything from CreateHotelDTO but is more specific for PUT request vs the CreateHotel POST request
+    {
+       
     }
 
     public class HotelDTO : CreateHotelDTO

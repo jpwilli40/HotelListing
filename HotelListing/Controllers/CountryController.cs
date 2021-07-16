@@ -47,7 +47,7 @@ namespace HotelListing.Controllers
             }
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = "GetCountry")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountry(int id) //prameter should match same name as parameter in HttpGet annotation
@@ -62,6 +62,105 @@ namespace HotelListing.Controllers
             {
                 _logger.LogError(ex, $"Something Went Wrong in the {nameof(GetCountry)}");
                 return StatusCode(500, "Internal Server Error. Please Try Again Later .");
+            }
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateCountry([FromBody] CreateCountryDTO countryDTO)  //using CreateHotelDTO since we dont need extra fields that are in HOtelDTO, only the required ones in this base DTO
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError($"Invalid POST attempt in {nameof(CreateCountry)}");  //can check for all necessary info here before trying to take action i.e. insert below
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var country = _mapper.Map<Country>(countryDTO);  //map the objects of the hotelDTO passed in into an object of HOtel
+                await _unitOfWork.Countries.Insert(country);
+                await _unitOfWork.Save();  //altering database so we need to commit
+
+                return CreatedAtRoute("GetCountry", new { id = country.CountryId }, country);  //Created returns 201, CreatedAtRoute returns actual object,  will let route know abouve (GetHotel) that we are using this
+
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(CreateCountry)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCountry(int id, [FromBody] UpdateCountryDTO countryDTO)
+        {
+            if (!ModelState.IsValid || id < 1)  //technically a PUT says if this item by id doesnt exist, create it, else update it -- this block ensures that there has to be an object with this id to proceed
+            {
+                _logger.LogError($"Invalid UPDATE attempt in {nameof(UpdateCountry)}");  //can check for all necessary info here before trying to take action
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var country = await _unitOfWork.Countries.Get(q => q.CountryId == id);
+                if (country == null)
+                {
+                    _logger.LogError($"Invalid UPDATE attempt in {nameof(UpdateCountry)}");  //can check for all necessary info here before trying to take action
+                    return BadRequest("Submitted data ia invalid");
+                }
+
+                _mapper.Map(countryDTO, country);
+                _unitOfWork.Countries.Update(country);
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(UpdateCountry)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteCountry(int id)
+        {
+            if (id < 1)
+            {
+                _logger.LogError($"Invalid DELETE attempt in {nameof(DeleteCountry)}");  //can check for all necessary info here before trying to take action
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var country = await _unitOfWork.Countries.Get(q => q.CountryId == id);
+                if (country == null)
+                {
+                    _logger.LogError($"Invalid DELETE attempt in {nameof(DeleteCountry)}");  //can check for all necessary info here before trying to take action
+                    return BadRequest("Submitted data ia invalid");
+                }
+
+                //_mapper.Map(hotelDTO, hotel);
+                await _unitOfWork.Countries.Delete(id);
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(DeleteCountry)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
             }
         }
     }
