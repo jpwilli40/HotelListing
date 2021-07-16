@@ -2,9 +2,11 @@ using HotelListing.Configurations;
 using HotelListing.Controllers.Data;
 using HotelListing.IRepository;
 using HotelListing.Repository;
+using HotelListing.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +35,10 @@ namespace HotelListing
                 options.UseSqlServer(Configuration.GetConnectionString("sqlConnection"))
             );
 
+            services.AddAuthentication();
+            services.ConfigureIdentity();  //can be used to handle all of the commands (like below) instead of baking this file bigger
+            services.ConfigureJWT(Configuration); //same as above, used to simplify this file from a bunch of configurations
+
             services.AddCors(o => {  //allows certian people to access your API
                 o.AddPolicy("CorsPolicy", builder =>
                     builder.AllowAnyOrigin()
@@ -42,6 +48,7 @@ namespace HotelListing
 
             services.AddAutoMapper(typeof(MapperInitializer));
             services.AddTransient<IUnitOfWork, UnitOfWork>(); //Transient - every time a new instance created, SCope - one for entire session, Singleton - just one instance
+            //services.AddScoped<IAuthManager, AuthManager>();
 
             services.AddSwaggerGen(c =>
             {
@@ -78,6 +85,7 @@ namespace HotelListing
 
             app.UseRouting();
 
+            //app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
