@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Marvin.Cache.Headers;
 
 namespace HotelListing.Controllers
 {
@@ -30,13 +31,17 @@ namespace HotelListing.Controllers
         }
 
         [HttpGet]
+        //[HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 60)]  //this one and the one below can override the global caching settings
+        //[HttpCacheValidation(MustRevalidate = false)]  
+        //[ResponseCache(Duration = 60)] //will set the lifetime of the cached data to 60 seconds
+        [ResponseCache(CacheProfileName = "120SecondsDuration")]  //also sets cache but using global method defined in Startup
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams) //[FromQuery] refers to the query in the url "?pageSize=10&pageNumber=3", PAGING built to protect api by only returning a set number of records
         {
             try
             {
-                var countries = await _unitOfWork.Countries.GetAll();
+                var countries = await _unitOfWork.Countries.GetAll(requestParams,null);
                 var results = _mapper.Map<IList<CountryDTO>>(countries);  //maps country objects to country DTOs.  By doing this we can manipulate the CountryDTO objects before displaying to user without modifying the actual Country object
                 return Ok(results);
             }
@@ -52,17 +57,12 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountry(int id) //prameter should match same name as parameter in HttpGet annotation
         {
-            try
-            {
+            //removed Try/catch in here to prove that global error handling works from ServiceExtensions/Startup, can now remove try/catches to cleanup code, only downside is the error is not specific
+            //testing global error handlling
+            //throw new Exception();
                 var country = await _unitOfWork.Countries.Get(q => q.CountryId == id, include: q => q.Include(x => x.Hotels));  //gets the country by country id where the parameter of this method matches the q.CountryId from the list of Countries, also lists out all of the hotels associated with that country
                 var result = _mapper.Map<CountryDTO>(country);  //maps country objects to country DTOs.  By doing this we can manipulate the CountryDTO objects before displaying to user without modifying the actual Country object
                 return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something Went Wrong in the {nameof(GetCountry)}");
-                return StatusCode(500, "Internal Server Error. Please Try Again Later .");
-            }
         }
 
         [HttpPost]

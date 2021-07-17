@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using HotelListing.Configurations;
 using HotelListing.Controllers.Data;
 using HotelListing.IRepository;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +37,12 @@ namespace HotelListing
                 options.UseSqlServer(Configuration.GetConnectionString("sqlConnection"))
             );
 
+            services.AddMemoryCache();  //For Throttling
+            services.ConfigureRateLimiting(); //--
+            services.AddHttpContextAccessor(); // --
+
+            services.AddResponseCaching();  //adds caching capabilities, moving this to ServiceExtensions called in method below (ConfigureHttpCacheHeaders  //use this if you want the age counter
+            //services.ConfigureHttpCacheHeaders();   //use this for the extra caching headers (expiry, etc...)
             services.AddAuthentication();
             services.ConfigureIdentity();  //can be used to handle all of the commands (like below) instead of baking this file bigger
             services.ConfigureJWT(Configuration); //same as above, used to simplify this file from a bunch of configurations
@@ -55,7 +63,15 @@ namespace HotelListing
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotellisting", Version = "v1" });
             });
 
-            services.AddControllers().AddNewtonsoftJson(op => op.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            services.AddControllers(config =>
+            {
+                config.CacheProfiles.Add("120SecondsDuration", new CacheProfile  //this adds global caching for data if desired.  If not just leave AddController param blank
+                {
+                    Duration = 120
+                });
+            }).AddNewtonsoftJson(op => op.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
+            services.ConfigureVersioning();
 
             services.AddRazorPages();
         }
@@ -77,11 +93,17 @@ namespace HotelListing
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotellisting v1"));
 
+            app.ConfigureExceptionHandler();  //added for global error handling
+
             app.UseHttpsRedirection();
 
             app.UseCors("CorsPolicy");  //calls CORS policy from above
 
             app.UseStaticFiles();
+            app.UseResponseCaching();  //adds caching capability
+            //app.UseHttpCacheHeaders();  //add back if you use the ConfigureHttpCacheHeaders in ServiceExtensions
+
+            //app.UseIpRateLimiting();  //throttling stuff
 
             app.UseRouting();
 

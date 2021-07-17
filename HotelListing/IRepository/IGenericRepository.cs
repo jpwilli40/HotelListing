@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Query;
+﻿using HotelListing.DTOModels;
+using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using X.PagedList;
 
 namespace HotelListing.IRepository
 {
@@ -15,6 +17,10 @@ namespace HotelListing.IRepository
             //List<string> includes = null
             Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null //replacing above statement to avoid small changes with DB table names for example from breaking DBContext, more strongly typed
             );
+
+        Task<IPagedList<T>> GetAll(
+            RequestParams requestParams,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null);
 
         Task<T> Get(Expression<Func<T, bool>> expression, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null);
 
