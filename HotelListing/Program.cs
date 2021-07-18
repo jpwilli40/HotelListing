@@ -15,9 +15,17 @@ namespace HotelListing
     {
         public static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
+            ////Log.Logger = new LoggerConfiguration()
+            ////    .WriteTo.File(
+            ////        path: "c:\\Users\\jpwilli1\\source\\logs\\logs-.txt",
+            ////        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+            ////        rollingInterval: RollingInterval.Day,
+            ////        restrictedToMinimumLevel: LogEventLevel.Information
+            ////    ).CreateLogger();
+            ///
+            Log.Logger = new LoggerConfiguration()  //using this one for the Azure deployment since Azure does not have a "local" c drive
                 .WriteTo.File(
-                    path: "c:\\Users\\jpwilli1\\source\\logs\\logs-.txt",
+                    path: "logs\\logs-.txt",
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
                     rollingInterval: RollingInterval.Day,
                     restrictedToMinimumLevel: LogEventLevel.Information
